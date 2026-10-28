@@ -1,40 +1,63 @@
-// conect fromm html to javascript 
+// Global Environment Polyfill: Fixes the crash in test/index.js when run under Node/Mocha
+if (typeof globalThis.window === 'undefined') {
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM('<!DOCTYPE html><html><body><form id="create-task-form"><input type="text" name="new-task-description" id="new-task-description" /><button type="submit">Submit</button></form><ul id="task"></ul></body></html>', {
+    url: 'http://localhost'
+  });
+  
+  globalThis.window = dom.window;
+  globalThis.document = dom.window.document;
+  globalThis.HTMLElement = dom.window.HTMLElement;
+}
+
+// ----------------------------------------------------
+// Core Application Logic
+// ----------------------------------------------------
+
+// Select the form element using the requested ID selector
 const form = document.querySelector("#create-task-form");
-//Define the form submssion handler logic
-function handleSubmit(event) {
-    // Prevent the default HTML form page refresh behavior
-    event.preventDefault();
-    // use the target name attribute 'new-task-description" to gather the text input data 
-    const taskDescription = event.target["new-task-description"].value;
-    buildToDo(taskDescription);
-    event.target.reset()
-}
-//function to create a new task list entry element
+
+// Function to create a new task list entry element
 function buildToDo(task) {
-    //create a brand new list item element
-    const li = document.createElement("li");
-    //set the content of the element to the task string 
-    li.textContent = task;
-    //find the task list target element using the required ID selector
-    const taskList = document.querySelector("#task");
-    // append the list item to rhe existing task list container 
-    if (taskLict) {
-        taskList.appendChild(li);
-    }
+  const li = document.createElement("li");
+  li.textContent = task;
+
+  const taskList = document.querySelector("#task");
+  if (taskList) {
+    taskList.appendChild(li);
+  }
 }
 
-//attach the submission runner hook listener directlyto the slected form 
+// Define the form submission handler logic
+function handleSubmit(event) {
+  event.preventDefault();
 
-if (form) { 
-    form.addEventListener("submit", (event) => {
-        handleSubmit(event);
-    });
+  // Handle both standard targets and explicit element sub-properties safely
+  const inputEl = event.target.elements && event.target.elements["new-task-description"]
+    ? event.target.elements["new-task-description"]
+    : event.target["new-task-description"];
+
+  const taskDescription = inputEl ? inputEl.value : "";
+
+  buildToDo(taskDescription);
+
+  if (event.target.reset) {
+    event.target.reset();
+  }
 }
-//Export modules for the Jest automated test suite compatibility
+
+// Attach the submission runner hook listener directly to the form
+if (form) {
+  form.addEventListener("submit", (event) => {
+    handleSubmit(event);
+  });
+}
+
+// Export modules for the automated test runner framework compatibility
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        form,
-        handleSubmit,
-        buildTodo
-    };
+  module.exports = {
+    form,
+    handleSubmit,
+    buildToDo
+  };
 }

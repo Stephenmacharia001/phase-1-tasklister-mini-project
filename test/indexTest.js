@@ -1,68 +1,51 @@
-// Keep tracker references for top-level handles
-let form = null;
-
-// Step 3: Function to create a new task list entry element
-function buildToDo(task) {
-  // Step 4: Create a brand new list item element
-  const li = document.createElement("li");
-
-  // Step 4: Set the text content of the element to the task string
-  li.textContent = task;
-
-  // Step 4: Find the task list target element using the required ID selector
-  const taskList = document.querySelector("#task");
-
-  // Step 4: Append the list item to the existing task list container
-  if (taskList) {
-    taskList.appendChild(li);
-  }
+// Ensure JSDOM environment properties are present before executing test modules
+if (typeof globalThis.window === 'undefined') {
+  const { JSDOM } = require('jsdom');
+  const dom = new JSDOM('<!DOCTYPE html><html><body><form id="create-task-form"><input type="text" name="new-task-description" id="new-task-description" /><button type="submit">Submit</button></form><ul id="task"></ul></body></html>');
+  globalThis.window = dom.window;
+  globalThis.document = dom.window.document;
 }
 
-// Define the form submission handler logic
-function handleSubmit(event) {
-  // Step 2: Prevent the default HTML form page refresh behavior
-  event.preventDefault();
+const assert = require('assert');
+const app = require('../index');
 
-  // Step 3: Use the target name attribute "new-task-description" to gather the text input data
-  // Using explicit brackets handles cases where the autograder interacts directly with form properties
-  const taskDescription = event.target.elements["new-task-description"] 
-    ? event.target.elements["new-task-description"].value 
-    : event.target["new-task-description"].value;
-
-  // Step 3: Send the gathered input string over to the element construction function
-  buildToDo(taskDescription);
-
-  // Clear the form fields cleanly for subsequent task entries
-  event.target.reset();
-}
-
-// Unified setup initialization block to safeguard Node.js environments from crashing
-function init() {
-  if (typeof document !== 'undefined') {
-    form = document.querySelector("#create-task-form");
-    if (form) {
-      form.addEventListener("submit", (event) => {
-        handleSubmit(event);
-      });
+describe('HTML Forms - Tasklister Local Fallback Suite', () => {
+  beforeEach(() => {
+    const taskList = document.querySelector('#task');
+    if (taskList) {
+      taskList.innerHTML = '';
     }
-  }
-}
+    const inputField = document.querySelector('#new-task-description');
+    if (inputField) {
+      inputField.value = '';
+    }
+  });
 
-// Safely execute layout binding only if we are running in a real browser environment
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-}
+  it('should verify buildToDo appends items correctly', () => {
+    app.buildToDo('Buy Groceries');
+    const taskList = document.querySelector('#task');
+    assert.strictEqual(taskList.children.length, 1);
+    assert.strictEqual(taskList.children[0].textContent, 'Buy Groceries');
+  });
 
-// Export modules for the automated test runner framework compatibility
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    form,
-    handleSubmit,
-    buildToDo,
-    init
-  };
-}
+  it('should verify handleSubmit processes form events correctly', () => {
+    const inputField = document.querySelector('#new-task-description');
+    if (inputField) {
+      inputField.value = 'Finish Assignment';
+    }
+
+    const mockEvent = {
+      preventDefault: () => {},
+      target: {
+        reset: () => {},
+        elements: {
+          'new-task-description': { value: 'Finish Assignment' }
+        }
+      }
+    };
+
+    app.handleSubmit(mockEvent);
+    const taskList = document.querySelector('#task');
+    assert.ok(taskList.innerHTML.includes('Finish Assignment'));
+  });
+});
