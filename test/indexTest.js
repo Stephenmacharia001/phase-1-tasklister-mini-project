@@ -7,7 +7,7 @@ if (typeof globalThis.window === 'undefined') {
 }
 
 const assert = require('assert');
-const app = require('../src.index.js ');
+const app = require('../index.js ');
 
 describe('HTML Forms - Tasklister Local Fallback Suite', () => {
   beforeEach(() => {
