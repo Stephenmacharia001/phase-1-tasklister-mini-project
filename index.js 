@@ -1,30 +1,33 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Select the form and the task list elements from the DOM
-  const form = document.querySelector('form') || document.getElementById('create-task-form');
-  const taskList = document.querySelector('ul') || document.getElementById('tasks') || document.getElementById('task-list');
+  // 1. Select the form and the container where tasks should be added
+  const createTaskForm = document.getElementById("create-task-form") || document.querySelector("form");
+  const taskListContainer = document.getElementById("tasks") || document.querySelector("ul");
 
-  // Verify elements exist before adding the listener
-  if (form && taskList) {
-    form.addEventListener('submit', (event) => {
-      // 2. Stop the form from refreshing the webpage on submission
+  // Only run the code if both elements are successfully found on the webpage
+  if (createTaskForm && taskListContainer) {
+    createTaskForm.addEventListener("submit", (event) => {
+      // 2. Prevent the form's default submission behavior from reloading the webpage
       event.preventDefault();
 
-      // 3. Locate the text input field
-      const taskInput = form.querySelector('input[type="text"]') || document.getElementById('new-task-description') || document.getElementById('task-input');
+      // 3. Select the specific text input box field
+      const taskInputField = document.getElementById("new-task-description") || createTaskForm.querySelector('input[type="text"]');
       
-      if (taskInput) {
-        const taskText = taskInput.value.trim();
+      if (taskInputField) {
+        const taskInputValueText = taskInputField.value.trim();
 
-        // 4. Only append if the user actually typed something
-        if (taskText !== '') {
-          const listItem = document.createElement('li');
-          listItem.textContent = taskText;
+        // 4. Ensure the input isn't empty before making changes to the DOM
+        if (taskInputValueText !== "") {
+          // Create a new list item element node
+          const newListItem = document.createElement("li");
           
-          // Append the new task ("Wash the dishes") to the list container
-          taskList.appendChild(listItem);
+          // Inject the task string literal values cleanly
+          newListItem.textContent = taskInputValueText;
 
-          // 5. Clear out the input field so the user can type the next task
-          form.reset();
+          // Append your new list item element straight to the webpage task list container
+          taskListContainer.appendChild(newListItem);
+
+          // 5. Clear out the input field context value so a user can type a fresh task safely
+          createTaskForm.reset();
         }
       }
     });
